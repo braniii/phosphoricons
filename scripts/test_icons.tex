@@ -1,0 +1,15 @@
+% Compile-test every icon in every weight on the current engine.
+% The mapping file is reused as a data source by redefining the def-icon macro.
+\documentclass{article}
+\usepackage[margin=1cm]{geometry}
+\ifdefined\pdfmapfile\pdfmapfile{+phosphoricons.map}\fi
+\usepackage{phosphoricons}
+\begin{document}
+\ExplSyntaxOn
+\cs_set_protected:Nn\__phosphoricons_def_icon:nnnnnn{
+  \ppIcon[thin]{#2}\ppIcon[light]{#2}\ppIcon{#2}%
+  \ppIcon[bold]{#2}\ppIcon[fill]{#2}\ppIcon[duotone]{#2}~
+}
+\file_input:n{phosphoricons-mapping.def}
+\ExplSyntaxOff
+\end{document}

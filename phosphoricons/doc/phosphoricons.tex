@@ -1,0 +1,133 @@
+% Copyright 2026 Daniel Nagel
+%
+% This work may be distributed and/or modified under the
+% conditions of the LaTeX Project Public License, either version 1.3c
+% of this license or (at your option) any later version.
+%
+% Documentation for the phosphoricons package. Compile with LuaLaTeX.
+\documentclass{article}
+
+\newcommand\ppversion{2.1.2-1}
+
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{phosphoricons}
+\usepackage{longtable}
+\usepackage{booktabs}
+\usepackage{listings}
+\usepackage[hidelinks]{hyperref}
+
+\lstset{basicstyle=\ttfamily\small, language=[LaTeX]TeX,
+  moretexcs={ppIcon,ppWeight,ppSet,ppAcorn,ppHeart,ppGithubLogo,usepackage},
+  columns=fullflexible, keepspaces=true}
+
+\title{The \textsf{phosphoricons} package\\
+  \large Phosphor Icons for \LaTeX\ \ppIcon{flask}}
+\author{Daniel Nagel}
+\date{Version \ppversion}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+
+This package provides access to all icons of the free and open-source icon
+family \emph{Phosphor Icons}\footnote{\url{https://phosphoricons.com}, designed
+by Tobias Fried and Helena Zhang, MIT licensed.} in all six weights ---
+\emph{thin} \ppIcon[thin]{sparkle}, \emph{light} \ppIcon[light]{sparkle},
+\emph{regular} \ppIcon{sparkle}, \emph{bold} \ppIcon[bold]{sparkle},
+\emph{fill} \ppIcon[fill]{sparkle} and \emph{duotone}
+\ppIcon[duotone]{sparkle} --- on pdf\LaTeX, Xe\LaTeX\ and Lua\LaTeX.
+
+\section{Usage}
+
+Load the package and typeset icons either with the generic command or with
+the per-icon commands:
+
+\begin{lstlisting}
+\usepackage{phosphoricons}
+...
+\ppIcon{acorn}          % generic, by icon name
+\ppAcorn                % same icon, generated command
+\end{lstlisting}
+
+Per-icon command names are the CamelCase form of the icon name prefixed with
+\texttt{pp}, so \texttt{alarm} $\to$ \verb|\ppAlarm| \ppAlarm{} and
+\texttt{address-book} $\to$ \verb|\ppAddressBook| \ppAddressBook.
+Icons inherit the current text color and font size:
+{\color{teal}\ppHeart[fill]}~\ppIcon{heart}~{\large\ppIcon{heart}}.
+
+\section{Weights and options}
+
+The weight can be selected at three levels; the most specific one wins:
+
+\begin{enumerate}
+  \item Package option: \verb|\usepackage[weight=bold]{phosphoricons}|
+  \item Mid-document: \verb|\ppSet{weight=bold}| or the shorthand
+    \verb|\ppWeight{bold}| (both respect grouping)
+  \item Per icon, as optional argument: \verb|\ppIcon[bold]{acorn}| or
+    \verb|\ppAcorn[bold]|
+\end{enumerate}
+
+The optional argument accepts either a bare weight or a key--value list with
+the same keys as \verb|\ppSet| and the package options:
+
+\begin{description}
+  \item[\texttt{weight}] one of \texttt{thin}, \texttt{light},
+    \texttt{regular} (default), \texttt{bold}, \texttt{fill},
+    \texttt{duotone}.
+  \item[\texttt{secondary}] the color of the duotone background layer as an
+    \textsf{xcolor} expression. The default \texttt{.!20} mixes the current
+    text color at 20\,\% --- the equivalent of the 20\,\% opacity Phosphor
+    uses on the web.
+\end{description}
+
+\begin{lstlisting}
+\ppIcon[duotone]{campfire}
+\ppIcon[weight=duotone, secondary=orange]{campfire}
+{\color{purple}\ppIcon[duotone]{campfire}}
+\end{lstlisting}
+
+yields \ppIcon[duotone]{campfire}
+\ppIcon[weight=duotone, secondary=orange]{campfire}
+{\color{purple}\ppIcon[duotone]{campfire}}.
+
+\section{Duotone details}
+
+Duotone icons consist of two stacked glyphs: a background layer drawn in the
+\texttt{secondary} color and a foreground outline drawn in the current text
+color. A few icons (e.g.\ \texttt{cell-signal-none}
+\ppIcon[duotone]{cell-signal-none}) only have a background layer.
+
+\section{pdf\LaTeX\ notes}
+
+Under pdf\LaTeX\ the TrueType fonts are embedded through the font map
+\texttt{phosphoricons.map}. When the package is installed from CTAN or
+\TeX~Live this map is registered automatically. For a manual installation run
+\begin{lstlisting}
+updmap-user --enable Map=phosphoricons.map
+\end{lstlisting}
+or add \verb|\pdfmapfile{+phosphoricons.map}| to the preamble.
+
+\clearpage
+\section{Icon list}
+
+Aliases (different names for the same icon) are listed as separate rows.
+
+\ExplSyntaxOn
+\cs_set_protected:Nn\__phosphoricons_def_icon:nnnnnn{
+  \ppIcon[thin]{#2}~\ppIcon[light]{#2}~\ppIcon{#2}~
+  \ppIcon[bold]{#2}~\ppIcon[fill]{#2}~\ppIcon[duotone]{#2} &
+  \texttt{\token_to_str:N#1} & \texttt{#2} \\
+}
+\begin{longtable}{lll}
+  \toprule
+  Icon & Command & Name \\
+  \midrule
+  \endhead
+  \bottomrule
+  \endfoot
+  \file_input:n{phosphoricons-mapping.def}
+\end{longtable}
+\ExplSyntaxOff
+
+\end{document}

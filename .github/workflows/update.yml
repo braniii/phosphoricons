@@ -1,0 +1,42 @@
+name: Check for Phosphor updates
+
+on:
+  schedule:
+    - cron: "0 6 3 * *" # monthly
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Regenerate even without a new upstream version"
+        type: boolean
+        default: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    container: texlive/texlive:latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install fontTools
+        run: pip install --break-system-packages fonttools
+
+      - name: Run upgrade pipeline
+        id: upgrade
+        run: FORCE=${{ inputs.force && '1' || '0' }} scripts/upgrade_phosphor.sh
+
+      - name: Create pull request
+        if: steps.upgrade.outputs.updated == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          commit-message: "Upgrade to Phosphor Icons ${{ steps.upgrade.outputs.version }}"
+          title: "Upgrade to Phosphor Icons ${{ steps.upgrade.outputs.version }}"
+          body: >
+            Automated upgrade to `@phosphor-icons/web`
+            ${{ steps.upgrade.outputs.version }}. All icons were compile-tested
+            on pdfLaTeX, XeLaTeX and LuaLaTeX and the documentation was
+            rebuilt.
+          branch: update/phosphor-${{ steps.upgrade.outputs.version }}
+          delete-branch: true

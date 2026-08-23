@@ -1,0 +1,19 @@
+name: Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    container: texlive/texlive:latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compile-test all icons on all engines
+        run: scripts/test_icons.sh
+
+      - name: Build documentation
+        run: scripts/build_doc.sh

@@ -1,0 +1,42 @@
+name: Release to CTAN
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Validate the upload instead of submitting it"
+        type: boolean
+        default: true
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    container: texlive/texlive:latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build documentation and CTAN archive
+        run: |
+          scripts/build_doc.sh
+          scripts/build_ctan.sh
+
+      - name: Read package version
+        id: version
+        run: |
+          V=$(sed -nE 's/.*ProvidesExplPackage\{phosphoricons\}\{[^}]*\}\{([0-9.-]+)\}.*/\1/p' \
+              phosphoricons/tex/phosphoricons.sty)
+          echo "pkgversion=$V" >> "$GITHUB_OUTPUT"
+
+      - name: Submit to CTAN
+        uses: paolobrasolin/ctan-submit-action@v2
+        with:
+          action: ${{ inputs.dry_run && 'validate' || 'upload' }}
+          file_path: build/ctan/phosphoricons.zip
+          fields: |
+            update: "true"
+            pkg: phosphoricons
+            version: ${{ steps.version.outputs.pkgversion }}
+            uploader: Daniel Nagel
+            email: daniel.nagel@quastify.com
+            license: lppl1.3c, mit
+            summary: Phosphor Icons for LaTeX (all weights, pdfLaTeX/XeLaTeX/LuaLaTeX)
