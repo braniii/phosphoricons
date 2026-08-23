@@ -1,0 +1,7 @@
+.venv/
+build/
+*.aux
+*.log
+*.out
+*.synctex.gz
+.DS_Store

@@ -1,0 +1,109 @@
+% Copyright 2026 Daniel Nagel
+%
+% This work may be distributed and/or modified under the
+% conditions of the LaTeX Project Public License, either version 1.3c
+% of this license or (at your option) any later version.
+% The latest version of this license is in
+%   http://www.latex-project.org/lppl.txt
+% and version 1.3 or later is part of all distributions of LaTeX
+% version 2005/12/01 or later.
+%
+% This work has the LPPL maintenance status `maintained'.
+%
+% The Current Maintainer of this work is Daniel Nagel
+%
+\RequirePackage{expl3}
+\ProvidesExplPackage{phosphoricons}{2026/08/23}{2.1.2-1}{Phosphor Icons}
+
+\RequirePackage{l3keys2e}
+\RequirePackage{xcolor}
+
+\msg_new:nnnn{phosphoricons}{icon-not-found}
+  {The~requested~icon~#1~was~not~found.}
+  {Maybe~you~mistyped~the~icon~name.~Please~check~the~package~documentation~
+    to~verify~the~spelling~of~#1.}
+\msg_new:nnnn{phosphoricons}{unknown-weight}
+  {The~requested~weight~#1~is~not~known.}
+  {Phosphor~icons~are~available~in~the~weights~
+    thin,~light,~regular,~bold,~fill~and~duotone.}
+
+\clist_const:Nn\c__phosphoricons_weights_clist
+  {thin,light,regular,bold,fill,duotone}
+
+\str_new:N\l_phosphoricons_weight_str
+\tl_new:N\l_phosphoricons_secondary_tl
+
+\cs_new_protected:Npn\phosphoricons_set_weight:n#1{
+  \clist_if_in:NnTF\c__phosphoricons_weights_clist{#1}
+    {\str_set:Nn\l_phosphoricons_weight_str{#1}}
+    {\msg_error:nnn{phosphoricons}{unknown-weight}{#1}}
+}
+
+\keys_define:nn{phosphoricons}
+{
+  weight .code:n = {\phosphoricons_set_weight:n{#1}},
+  secondary .tl_set:N = \l_phosphoricons_secondary_tl,
+}
+\str_set:Nn\l_phosphoricons_weight_str{regular}
+\tl_set:Nn\l_phosphoricons_secondary_tl{.!20}
+
+\ProcessKeysOptions{phosphoricons}
+
+\RequirePackage{xparse}
+
+% Engine seam: each helper provides
+%   \phosphoricons_use_icon:nn{<weight>}{<name>}
+% and a definition of \__phosphoricons_def_icon:nnnnnn consuming
+% phosphoricons-mapping.def.
+\str_case:onTF\c_sys_engine_str{
+  {luatex}{}
+  {xetex}{}
+}{
+  \RequirePackage{phosphoricons-utex-helper}
+}{
+  \RequirePackage{phosphoricons-generic-helper}
+}
+
+\file_input:n{phosphoricons-mapping.def}
+
+% Duotone layering, engine independent: #1 draws the background glyph,
+% #2 the foreground glyph (same width). The background is colored with
+% \l_phosphoricons_secondary_tl; for single-layer duotone icons #2 is empty
+% and the background keeps its natural width.
+\cs_new_protected:Nn\__phosphoricons_secondary_color:{
+  \exp_args:NV\color\l_phosphoricons_secondary_tl
+}
+\cs_new_protected:Nn\phosphoricons_duotone_layers:nn{
+  \tl_if_blank:nTF{#2}{
+    {\__phosphoricons_secondary_color: #1}
+  }{
+    \makebox[0pt][l]{{\__phosphoricons_secondary_color: #1}}#2
+  }
+}
+
+% User interface. The optional argument is either a bare weight
+% (\ppIcon[bold]{acorn}) or a key-value list
+% (\ppIcon[weight=duotone, secondary=blue!30]{acorn}).
+\cs_new_protected:Npn\phosphoricons_icon:nn#1#2{
+  \group_begin:
+    \tl_if_blank:nF{#1}{
+      \tl_if_in:nnTF{#1}{=}
+        {\keys_set:nn{phosphoricons}{#1}}
+        {\phosphoricons_set_weight:n{#1}}
+    }
+    \exp_args:NV\phosphoricons_use_icon:nn\l_phosphoricons_weight_str{#2}
+  \group_end:
+}
+
+\NewDocumentCommand\ppPreselectedIcon{m O{}}{
+  \phosphoricons_icon:nn{#2}{#1}
+}
+\NewDocumentCommand\ppIcon{O{} m}{
+  \phosphoricons_icon:nn{#1}{#2}
+}
+\NewDocumentCommand\ppWeight{m}{
+  \phosphoricons_set_weight:n{#1}
+}
+\NewDocumentCommand\ppSet{m}{
+  \keys_set:nn{phosphoricons}{#1}
+}

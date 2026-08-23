@@ -1,0 +1,74 @@
+% Copyright 2026 Daniel Nagel
+%
+% This work may be distributed and/or modified under the
+% conditions of the LaTeX Project Public License, either version 1.3c
+% of this license or (at your option) any later version.
+% The latest version of this license is in
+%   http://www.latex-project.org/lppl.txt
+% and version 1.3 or later is part of all distributions of LaTeX
+% version 2005/12/01 or later.
+%
+% This work has the LPPL maintenance status `maintained'.
+%
+% The Current Maintainer of this work is Daniel Nagel
+%
+\@ifpackageloaded{phosphoricons}{}{\PackageError{phosphoricons-generic-helper}
+  {This package should not be loaded individually.
+   Load phosphoricons instead.}{}}
+
+\ProvidesExplPackage{phosphoricons-generic-helper}{2026/08/23}{2.1.2-1}
+  {non-uTeX helper for phosphoricons}
+
+% Mapping line:
+%   \__phosphoricons_def_icon:nnnnnn {macro} {name} {cp}
+%     {{plain-chunk}{plain-slot}} {{duo-chunk}{duo-slot}} {{cp2}{chunk2}{slot2}}
+% pdfTeX renders by chunk/slot; the codepoints (#3, and cp2 inside #6) are
+% only used on unicode engines. Stored per icon:
+%   {{plain-chunk}{plain-slot}} {{duo-chunk}{duo-slot}} {{chunk2}{slot2} or empty}
+\cs_new_protected:Nn\__phosphoricons_def_icon:nnnnnn{
+  \tl_if_empty:nF{#1}{
+    \cs_new_protected:Npn#1{\ppPreselectedIcon{#2}}
+  }
+  \tl_const:cx{c__phosphoricons_icon_#2_tl}
+    {{\exp_not:n{#4}}{\exp_not:n{#5}}
+     {\tl_if_blank:nF{#6}{\__phosphoricons_strip_cp:nw#6\q_stop}}}
+}
+\cs_new:Npn\__phosphoricons_strip_cp:nw#1#2\q_stop{\exp_not:n{#2}}
+
+\cs_new_protected:Npn\__phosphoricons_plain_glyph:nnn#1#2#3{
+  % {chunk}{slot}{weight}
+  {\usefont{U}{phosphoricons#1}{#3}{n}\char#2 }
+}
+\cs_new_protected:Npn\__phosphoricons_duo_glyph:nn#1#2{
+  % {chunk}{slot} in the duotone layout
+  {\usefont{U}{phosphoriconsduo#1}{duotone}{n}\char#2 }
+}
+\cs_new_protected:Npn\__phosphoricons_duo_sec:nn#1#2{
+  \__phosphoricons_duo_glyph:nn{#1}{#2}
+}
+
+\cs_new_protected:Npn\__phosphoricons_icon_at:nnnnn#1#2#3#4#5{
+  % {{pc}{ps}} {{dc}{ds}} {{c2}{s2} or empty} {weight} {name}
+  \str_if_eq:nnTF{#4}{duotone}{
+    \tl_if_blank:nTF{#3}{
+      \phosphoricons_duotone_layers:nn{\__phosphoricons_duo_glyph:nn#2}{}
+    }{
+      \phosphoricons_duotone_layers:nn
+        {\__phosphoricons_duo_glyph:nn#2}
+        {\__phosphoricons_duo_sec:nn#3}
+    }
+  }{
+    \__phosphoricons_plain_glyph:nnn#1{#4}
+  }
+}
+
+\cs_new_protected:Nn\phosphoricons_use_icon:nn{
+  \cs_if_exist:cTF{c__phosphoricons_icon_#2_tl}{
+    \exp_last_unbraced:Nv
+      \__phosphoricons_icon_at:nnnnn
+      {c__phosphoricons_icon_#2_tl}
+        {#1}{#2}
+  }{
+    \msg_error:nnx{phosphoricons}{icon-not-found}{#2}
+  }
+}
