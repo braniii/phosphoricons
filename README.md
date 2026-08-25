@@ -1,3 +1,5 @@
+[![CTAN](https://img.shields.io/ctan/v/phosphoricons.svg)](https://ctan.org/pkg/phosphoricons)
+
 # phosphoricons — Phosphor Icons for LaTeX
 
 A LaTeX package providing all [Phosphor Icons](https://phosphoricons.com) in
