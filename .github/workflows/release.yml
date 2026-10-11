@@ -28,15 +28,16 @@ jobs:
           echo "pkgversion=$V" >> "$GITHUB_OUTPUT"
 
       - name: Submit to CTAN
-        uses: paolobrasolin/ctan-submit-action@v2
-        with:
-          action: ${{ inputs.dry_run && 'validate' || 'upload' }}
-          file_path: build/ctan/phosphoricons.zip
-          fields: |
-            update: "true"
-            pkg: phosphoricons
-            version: ${{ steps.version.outputs.pkgversion }}
-            uploader: Daniel Nagel
-            email: daniel.nagel@quastify.com
-            license: lppl1.3c, mit
-            summary: Phosphor Icons for LaTeX (all weights, pdfLaTeX/XeLaTeX/LuaLaTeX)
+        env:
+          ACTION: ${{ inputs.dry_run && 'validate' || 'upload' }}
+          VERSION: ${{ steps.version.outputs.pkgversion }}
+          CTAN_EMAIL: ${{ secrets.CTAN_EMAIL }}
+        run: |
+          code=$(curl -sS -o response.json -w '%{http_code}' \
+              -F update=true -F pkg=phosphoricons -F version="$VERSION" \
+              -F uploader="Daniel Nagel" -F email="$CTAN_EMAIL" \
+              -F license=lppl1.3c -F license=mit \
+              -F file=@build/ctan/phosphoricons.zip "https://www.ctan.org/submit/$ACTION")
+          echo "CTAN responded with $code:"
+          cat response.json; echo
+          [ "$code" = 200 ] && ! grep -qE '"ERROR"|Upload failed' response.json
