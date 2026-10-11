@@ -18,10 +18,16 @@ jobs:
       contents: write
       pull-requests: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
+      # The texlive image ships python3 but no pip; take fontTools from Debian.
       - name: Install fontTools
-        run: pip install --break-system-packages fonttools
+        run: apt-get update && apt-get install -y --no-install-recommends python3-fonttools
+
+      # The workspace is owned by the runner user, not the container's root;
+      # without this, git refuses to operate when the PR is created.
+      - name: Mark repository as safe for git
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
       - name: Run upgrade pipeline
         id: upgrade
@@ -29,7 +35,7 @@ jobs:
 
       - name: Create pull request
         if: steps.upgrade.outputs.updated == 'true'
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         with:
           commit-message: "Upgrade to Phosphor Icons ${{ steps.upgrade.outputs.version }}"
           title: "Upgrade to Phosphor Icons ${{ steps.upgrade.outputs.version }}"
